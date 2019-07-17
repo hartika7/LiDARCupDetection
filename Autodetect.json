@@ -1,0 +1,9 @@
+﻿{
+  "ThMin": -30, // deg
+  "ThMax": 30, // deg
+  "RMin": 400, // mm
+  "RMax": 800, // mm
+  "RTol": 75, // mm
+  "MoveTol": 15, // mm
+  "ActiveTimeTol": 5 // s
+}
