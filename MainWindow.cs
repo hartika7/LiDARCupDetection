@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -37,10 +39,22 @@ namespace LiDARCupDetection
             objectsChart.ChartAreas[0].AxisY.MajorGrid.Enabled = false;
             objectsChart.ChartAreas[0].AxisX.ScaleView.Zoomable = true;
             objectsChart.ChartAreas[0].AxisY.ScaleView.Zoomable = true;
-            objectsChart.ChartAreas[0].AxisX.Minimum = -1000;
-            objectsChart.ChartAreas[0].AxisX.Maximum = 1000;
-            objectsChart.ChartAreas[0].AxisY.Minimum = 0;
-            objectsChart.ChartAreas[0].AxisY.Maximum = 2000;
+
+            try
+            {
+                Logger.Debug("Initializing chart");
+
+                var settings = (NameValueCollection)ConfigurationManager.GetSection("GuiSettings").NotNull();
+                objectsChart.ChartAreas[0].AxisX.Minimum = int.Parse(settings["XMin"].NotNull());
+                objectsChart.ChartAreas[0].AxisX.Maximum = int.Parse(settings["XMax"].NotNull());
+                objectsChart.ChartAreas[0].AxisY.Minimum = int.Parse(settings["YMin"].NotNull());
+                objectsChart.ChartAreas[0].AxisY.Maximum = int.Parse(settings["YMax"].NotNull());
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Initialization failed");
+                throw;
+            }
 
             DrawStaticObjects();
         }

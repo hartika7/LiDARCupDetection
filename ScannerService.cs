@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Configuration;
 using System.Globalization;
 using System.IO;
@@ -69,16 +70,18 @@ namespace LiDARCupDetection
 
             try
             {
-                _scannerIP = ConfigurationManager.AppSettings["ScannerIP"].NotNull();
+                var settings = (NameValueCollection)ConfigurationManager.GetSection("ScannerServiceSettings").NotNull();
+
+                _scannerIP = settings["ScannerIP"].NotNull();
                 Logger.Debug($"Using ScannerIP: {_scannerIP}");
 
-                _scannerPort = int.Parse(ConfigurationManager.AppSettings["ScannerPort"].NotNull());
+                _scannerPort = int.Parse(settings["ScannerPort"].NotNull());
                 Logger.Debug($"Using ScannerPort: {_scannerPort}");
 
-                _startAngle = int.Parse(ConfigurationManager.AppSettings["StartAngle"].NotNull());
+                _startAngle = int.Parse(settings["StartAngle"].NotNull());
                 Logger.Debug($"Using StartAngle: {_startAngle}");
 
-                _stopAngle = int.Parse(ConfigurationManager.AppSettings["StopAngle"].NotNull());
+                _stopAngle = int.Parse(settings["StopAngle"].NotNull());
                 Logger.Debug($"Using StopAngle: {_stopAngle}");
             }
             catch (Exception ex)

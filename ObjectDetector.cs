@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using static LiDARCupDetection.ScannerService;
 using Newtonsoft.Json;
 using System.IO;
+using System.Collections.Specialized;
 
 namespace LiDARCupDetection
 {
@@ -89,16 +90,18 @@ namespace LiDARCupDetection
 
             try
             {
-                _refreshInterval = int.Parse(ConfigurationManager.AppSettings["RefreshInterval"].NotNull());
+                var settings = (NameValueCollection)ConfigurationManager.GetSection("ObjectDetectorSettings").NotNull();
+
+                _refreshInterval = int.Parse(settings["RefreshInterval"].NotNull());
                 Logger.Debug($"Using RefreshInterval: {_refreshInterval}");
 
-                var objectsJson = ConfigurationManager.AppSettings["ObjectsJSON"].NotNull();
+                var objectsJson = settings["ObjectsJSON"].NotNull();
                 Logger.Debug($"Using ObjectsJSON: {objectsJson}");
 
                 _objects = JsonConvert.DeserializeObject<List<ObjectLocation>>(File.ReadAllText(objectsJson));
                 Logger.Debug($"Loaded objects: {_objects.ToJSON(false)}");
 
-                var autodetectJson = ConfigurationManager.AppSettings["AutodetectJSON"].NotNull();
+                var autodetectJson = settings["AutodetectJSON"].NotNull();
                 Logger.Debug($"Using AutodetectJSON: {autodetectJson}");
 
                 _autodetectConfiguration = JsonConvert.DeserializeObject<AutodetectConfiguration>(File.ReadAllText(autodetectJson));

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Configuration;
 using System.Linq;
 using System.Net;
@@ -32,7 +33,9 @@ namespace LiDARCupDetection
 
             try
             {
-                _tcpPort = int.Parse(ConfigurationManager.AppSettings["TcpPort"].NotNull());
+                var settings = (NameValueCollection)ConfigurationManager.GetSection("TcpCommunicationSettings").NotNull();
+
+                _tcpPort = int.Parse(settings["TcpPort"].NotNull());
                 Logger.Debug($"Using TcpPort: {_tcpPort}");
             }
             catch (Exception ex)
