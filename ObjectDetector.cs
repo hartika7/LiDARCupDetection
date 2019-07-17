@@ -17,46 +17,34 @@ namespace LiDARCupDetection
         public class ObjectLocation
         {
             public string Id { get; set; }
-            public double ThMin { get; set; }
-            public double ThMax { get; set; }
-            public double RMin { get; set; }
-            public double RMax { get; set; }
+            public Limits Limits { get; set; }
+            public Point Location { get; set; }
+            public bool Autodetected { get; set; }
             public bool Active => ActiveTime >= ActiveTimeTol;
             public double ActiveTime { get; set; }
             public double ActiveTimeTol { get; set; }
 
             public ObjectLocation()
             {
+                Autodetected = false;
                 ActiveTime = 0;
-            }
-        }
-
-        public class AutodetectLocation
-        {
-            public string Id { get; set; }
-            public Point Point { get; set; }
-            public bool Active => ActiveTime >= _activeTimeTol;
-            public double ActiveTime { get; set; }
-            private double _activeTimeTol { get; set; }
-
-            public AutodetectLocation(string id, Point point, double activeTimeTol)
-            {
-                Id = id;
-                Point = point;
-                ActiveTime = 0;
-                _activeTimeTol = activeTimeTol;
             }
         }
 
         public class AutodetectConfiguration
         {
+            public Limits Limits { get; set; }
+            public double RTol { get; set; }
+            public double MoveTol { get; set; }
+            public double ActiveTimeTol { get; set; }
+        }
+
+        public class Limits
+        {
             public double ThMin { get; set; }
             public double ThMax { get; set; }
             public double RMin { get; set; }
             public double RMax { get; set; }
-            public double RTol { get; set; }
-            public double MoveTol { get; set; }
-            public double ActiveTimeTol { get; set; }
         }
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
@@ -65,7 +53,6 @@ namespace LiDARCupDetection
         private Timer _refreshTimer;
         private static int _refreshInterval;
         private static List<ObjectLocation> _objects { get; set; }
-        private static List<AutodetectLocation> _autodetectLocations { get; set; }
         private static AutodetectConfiguration _autodetectConfiguration { get; set; }
 
         public ObjectDetector(ScannerService scannerService = null)
@@ -74,7 +61,6 @@ namespace LiDARCupDetection
 
             _scannerService = scannerService ?? new ScannerService();
             _objects = new List<ObjectLocation>();
-            _autodetectLocations = new List<AutodetectLocation>();
 
             Configure();
 
@@ -129,6 +115,12 @@ namespace LiDARCupDetection
             return _objects;
         }
 
+
+        public List<ObjectLocation> GetStaticObjects()
+        {
+            return _objects.Where(v => !v.Autodetected).ToList();
+        }
+
         public List<ObjectLocation> GetActiveObjects()
         {
             return _objects
@@ -136,10 +128,10 @@ namespace LiDARCupDetection
                 .ToList();
         }
 
-        public List<AutodetectLocation> GetAutodetected()
+        public List<ObjectLocation> GetAutodetected()
         {
-            return _autodetectLocations
-                .Where(v => v.Active)
+            return _objects
+                .Where(v => v.Active && v.Autodetected)
                 .ToList();
         }
 
@@ -165,14 +157,15 @@ namespace LiDARCupDetection
         private static async void Refresh(object sender, ElapsedEventArgs e)
         {
             var scanResult = await _scannerService.Poll().ConfigureAwait(false);
+            var staticObjects = _objects.Where(v => !v.Autodetected).ToList();
 
-            foreach (var obj in _objects)
+            foreach (var obj in staticObjects)
             {
                 var objActive = scanResult.Points.Any(v =>
-                v.Th >= obj.ThMin &&
-                v.Th <= obj.ThMax &&
-                v.R >= obj.RMin &&
-                v.R <= obj.RMax);
+                v.Th >= obj.Limits.ThMin &&
+                v.Th <= obj.Limits.ThMax &&
+                v.R >= obj.Limits.RMin &&
+                v.R <= obj.Limits.RMax);
 
                 if (objActive)
                 {
@@ -195,19 +188,20 @@ namespace LiDARCupDetection
                 AutodetectNext(scanResult, 0, ref autodetectPoints);
             } else
             {
-                _autodetectLocations.Clear();
+                _objects.RemoveAll(v => v.Autodetected);
                 return;
             }
 
-            foreach (var location in _autodetectLocations)
+            var autodetectedObjects = _objects.Where(v => v.Autodetected).ToList();
+            foreach (var location in autodetectedObjects)
             {
                 try
                 {
-                    var newLocation = autodetectPoints.Single(v => Distance(location.Point, v) <= _autodetectConfiguration.MoveTol);
+                    var newLocation = autodetectPoints.Single(v => Distance(location.Location, v) <= _autodetectConfiguration.MoveTol);
 
                     if (!location.Active)
                     {
-                        location.Point = newLocation;
+                        location.Location = newLocation;
                     }
 
                     location.ActiveTime += _refreshInterval;
@@ -215,16 +209,19 @@ namespace LiDARCupDetection
                 }
                 catch
                 {
-                    _autodetectLocations.Remove(location);
+                    _objects.Remove(location);
                 }
             }
 
             autodetectPoints.ForEach(v =>
             {
-                _autodetectLocations.Add(new AutodetectLocation(
-                    Guid.NewGuid().ToString().ToUpper(), 
-                    v, 
-                    _autodetectConfiguration.ActiveTimeTol));
+                _objects.Add(new ObjectLocation()
+                {
+                    Id = Guid.NewGuid().ToString().ToUpper(),
+                    Location = v,
+                    Autodetected = true,
+                    ActiveTimeTol = _autodetectConfiguration.ActiveTimeTol
+                });
             });
         }
 
@@ -238,10 +235,10 @@ namespace LiDARCupDetection
                 var rStart = scanResult.Points.Select(v => v.R).ToList()[i];
                 var thStart = scanResult.Points.Select(v => v.Th).ToList()[i];
 
-                if (rStart > _autodetectConfiguration.RMin &&
-                    rStart < _autodetectConfiguration.RMax &&
-                    thStart > _autodetectConfiguration.ThMin &&
-                    thStart < _autodetectConfiguration.ThMax)
+                if (rStart > _autodetectConfiguration.Limits.RMin &&
+                    rStart < _autodetectConfiguration.Limits.RMax &&
+                    thStart > _autodetectConfiguration.Limits.ThMin &&
+                    thStart < _autodetectConfiguration.Limits.ThMax)
                 {
                     indexStart = i + 1;
 
@@ -255,9 +252,9 @@ namespace LiDARCupDetection
                         var rStop = scanResult.Points.Select(v => v.R).ToList()[j];
                         var thStop = scanResult.Points.Select(v => v.Th).ToList()[j];
 
-                        if ((rStop > rStart + _autodetectConfiguration.RTol || rStop > _autodetectConfiguration.RMax) &&
-                            thStop > _autodetectConfiguration.ThMin &&
-                            thStop < _autodetectConfiguration.ThMax)
+                        if ((rStop > rStart + _autodetectConfiguration.RTol || rStop > _autodetectConfiguration.Limits.RMax) &&
+                            thStop > _autodetectConfiguration.Limits.ThMin &&
+                            thStop < _autodetectConfiguration.Limits.ThMax)
                         {
                             indexStop = j - 2;
                             break;

@@ -1,18 +1,22 @@
 ﻿[
   {
     "Id": "Cup1", // string
-    "ThMin": -5, // deg
-    "ThMax": 5, // deg
-    "RMin": 400, // mm
-    "RMax": 600, // mm
+    "Limits": {
+      "ThMin": -5, // deg
+      "ThMax": 5, // deg
+      "RMin": 400, // mm
+      "RMax": 600 // mm
+    },
     "ActiveTimeTol": 5 // s
   },
   {
     "Id": "Cup2",
-    "ThMin": -20,
-    "ThMax": -10,
-    "RMin": 400,
-    "RMax": 600,
+    "Limits": {
+      "ThMin": -20,
+      "ThMax": -10,
+      "RMin": 400,
+      "RMax": 600
+    },
     "ActiveTimeTol": 5
   }
 ]

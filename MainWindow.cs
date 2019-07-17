@@ -70,7 +70,7 @@ namespace LiDARCupDetection
                 objectsChart.Series["Autodetected"].Points.Clear();
                 var autodetected = _objectDetector.GetAutodetected();
                 autodetected.ForEach(v => {
-                    var pointIndex = objectsChart.Series["Autodetected"].Points.AddXY(v.Point.X, v.Point.Y);
+                    var pointIndex = objectsChart.Series["Autodetected"].Points.AddXY(v.Location.X, v.Location.Y);
                     objectsChart.Series["Autodetected"].Points[pointIndex].Label = v.Id;
                 });
 
@@ -84,16 +84,16 @@ namespace LiDARCupDetection
 
         private void DrawStaticObjects()
         {
-            foreach (var obj in _objectDetector.GetObjects())
+            foreach (var obj in _objectDetector.GetStaticObjects())
             {
                 var chartSeries = objectsChart.Series.Add(obj.Id);
                 chartSeries.ChartType = SeriesChartType.Line;
                 chartSeries.Color = Color.Green;
 
-                var pointBL = new Point(obj.ThMin, obj.RMin);
-                var pointBR = new Point(obj.ThMax, obj.RMin);
-                var pointTR = new Point(obj.ThMax, obj.RMax);
-                var pointTL = new Point(obj.ThMin, obj.RMax);
+                var pointBL = new Point(obj.Limits.ThMin, obj.Limits.RMin);
+                var pointBR = new Point(obj.Limits.ThMax, obj.Limits.RMin);
+                var pointTR = new Point(obj.Limits.ThMax, obj.Limits.RMax);
+                var pointTL = new Point(obj.Limits.ThMin, obj.Limits.RMax);
                 GetArcPoints(pointBL.Th, pointBR.Th, pointBL.R).ForEach(v => chartSeries.Points.AddXY(v.X, v.Y));
                 GetArcPoints(pointTR.Th, pointTL.Th, pointTR.R).ForEach(v => chartSeries.Points.AddXY(v.X, v.Y));
                 chartSeries.Points.AddXY(pointBL.X, pointBL.Y);
