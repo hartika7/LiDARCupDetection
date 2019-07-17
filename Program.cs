@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -20,6 +22,8 @@ namespace LiDARCupDetection
 
             _objectDetector = new ObjectDetector();
             _tcpCommunication = new TcpCommunication(_objectDetector);
+
+            Task.Run(() => UpdateTitle());
 
             Console.WriteLine("LiDAR Cup Detection for Drinkkirobotti 5.0");
             Console.WriteLine($"Serving on port: {_tcpCommunication.GetPort()}\n");
@@ -73,6 +77,16 @@ namespace LiDARCupDetection
             var helpText = "Commands:\n" +
                 "help, gui, port, objects, active, auto, autoconfig";
             Console.WriteLine(helpText);
+        }
+
+        private static void UpdateTitle()
+        {
+            while (true)
+            {
+                var appName = Assembly.GetExecutingAssembly().GetName().Name;
+                Console.Title = $"{appName} ({(_objectDetector.IsOnline() ? "Online" : "Offline")})";
+                Thread.Sleep(1000);
+            }
         }
     }
 }

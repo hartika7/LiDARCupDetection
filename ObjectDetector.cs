@@ -116,6 +116,11 @@ namespace LiDARCupDetection
             return await _scannerService.Poll().ConfigureAwait(false);
         }
 
+        public bool IsOnline()
+        {
+            return _scannerService.IsConnected();
+        }
+
         public List<ObjectLocation> GetObjects()
         {
             return _objects;

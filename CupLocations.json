@@ -9,8 +9,8 @@
   },
   {
     "Id": "Cup2",
-    "ThMin": -10,
-    "ThMax": -5,
+    "ThMin": -20,
+    "ThMax": -10,
     "RMin": 400,
     "RMax": 600,
     "ActiveTimeTol": 5

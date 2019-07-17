@@ -32,18 +32,19 @@
             System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
             System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            this.pointsChart = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.objectsChart = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.coordinatesLabel = new System.Windows.Forms.Label();
-            this.pollTimer = new System.Windows.Forms.Timer(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.pointsChart)).BeginInit();
+            this.refreshTimer = new System.Windows.Forms.Timer(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.objectsChart)).BeginInit();
             this.SuspendLayout();
             // 
-            // pointsChart
+            // objectsChart
             // 
             chartArea1.Name = "ChartArea1";
-            this.pointsChart.ChartAreas.Add(chartArea1);
-            this.pointsChart.Location = new System.Drawing.Point(12, 12);
-            this.pointsChart.Name = "pointsChart";
+            this.objectsChart.ChartAreas.Add(chartArea1);
+            this.objectsChart.Location = new System.Drawing.Point(16, 15);
+            this.objectsChart.Margin = new System.Windows.Forms.Padding(4);
+            this.objectsChart.Name = "objectsChart";
             series1.ChartArea = "ChartArea1";
             series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
             series1.Color = System.Drawing.Color.Blue;
@@ -52,38 +53,40 @@
             series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Point;
             series2.Color = System.Drawing.Color.Red;
             series2.Name = "Autodetected";
-            this.pointsChart.Series.Add(series1);
-            this.pointsChart.Series.Add(series2);
-            this.pointsChart.Size = new System.Drawing.Size(776, 413);
-            this.pointsChart.TabIndex = 0;
-            this.pointsChart.Text = "chart1";
-            this.pointsChart.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pointsChart_MouseMove);
-            this.pointsChart.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.pointsChart_MouseWheel);
+            this.objectsChart.Series.Add(series1);
+            this.objectsChart.Series.Add(series2);
+            this.objectsChart.Size = new System.Drawing.Size(1035, 508);
+            this.objectsChart.TabIndex = 0;
+            this.objectsChart.Text = "chart1";
+            this.objectsChart.MouseMove += new System.Windows.Forms.MouseEventHandler(this.objectsChart_MouseMove);
+            this.objectsChart.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.objectsChart_MouseWheel);
             // 
             // coordinatesLabel
             // 
             this.coordinatesLabel.AutoSize = true;
-            this.coordinatesLabel.Location = new System.Drawing.Point(12, 428);
+            this.coordinatesLabel.Location = new System.Drawing.Point(16, 527);
+            this.coordinatesLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.coordinatesLabel.Name = "coordinatesLabel";
-            this.coordinatesLabel.Size = new System.Drawing.Size(33, 13);
+            this.coordinatesLabel.Size = new System.Drawing.Size(42, 17);
             this.coordinatesLabel.TabIndex = 1;
             this.coordinatesLabel.Text = "X:, Y:";
             // 
-            // pollTimer
+            // refreshTimer
             // 
-            this.pollTimer.Tick += new System.EventHandler(this.pollTimer_Tick);
+            this.refreshTimer.Tick += new System.EventHandler(this.refreshTimer_Tick);
             // 
             // MainWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(1067, 554);
             this.Controls.Add(this.coordinatesLabel);
-            this.Controls.Add(this.pointsChart);
+            this.Controls.Add(this.objectsChart);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "MainWindow";
             this.Text = "LiDARCupDetection";
             this.Load += new System.EventHandler(this.MainWindow_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.pointsChart)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.objectsChart)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -91,8 +94,8 @@
 
         #endregion
 
-        private System.Windows.Forms.DataVisualization.Charting.Chart pointsChart;
+        private System.Windows.Forms.DataVisualization.Charting.Chart objectsChart;
         private System.Windows.Forms.Label coordinatesLabel;
-        private System.Windows.Forms.Timer pollTimer;
+        private System.Windows.Forms.Timer refreshTimer;
     }
 }
