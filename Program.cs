@@ -90,8 +90,14 @@ namespace LiDARCupDetection
             Logger.Debug("Showing GUI");
 
             Application.EnableVisualStyles();
-            Task.Run(() => Application.Run(new MainWindow("TIM561", _objectDetectorTIM561)));
-            Task.Run(() => Application.Run(new MainWindow("TIM361", _objectDetectorTIM361)));
+            if (_objectDetectorTIM561.IsEnabled())
+            {
+                Task.Run(() => Application.Run(new MainWindow("TIM561", _objectDetectorTIM561)));
+            }
+            if (_objectDetectorTIM361.IsEnabled())
+            {
+                Task.Run(() => Application.Run(new MainWindow("TIM361", _objectDetectorTIM361)));
+            }
         }
 
         private static void PrintHelp()
@@ -106,9 +112,18 @@ namespace LiDARCupDetection
             while (true)
             {
                 var appName = Assembly.GetExecutingAssembly().GetName().Name;
-                Console.Title = $"{appName} (TIM561: {(_objectDetectorTIM561.IsOnline() ? "Online" : "Offline")}, TIM361: {(_objectDetectorTIM361.IsOnline() ? "Online" : "Offline")})";
+                Console.Title = $"{appName} (TIM561: {GetDetectorStatus(_objectDetectorTIM561)}, TIM361: {GetDetectorStatus(_objectDetectorTIM361)})";
                 Thread.Sleep(1000);
             }
+        }
+
+        private static string GetDetectorStatus(ObjectDetector objectDetector)
+        {
+            if (!objectDetector.IsEnabled())
+            {
+                return "Disabled";
+            }
+            return objectDetector.IsOnline() ? "Online" : "Offline";
         }
     }
 }

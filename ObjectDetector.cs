@@ -64,10 +64,13 @@ namespace LiDARCupDetection
 
             Configure(settingsPostfix);
 
-            _refreshTimer = new Timer();
-            _refreshTimer.Elapsed += Refresh;
-            _refreshTimer.Interval = _refreshInterval;
-            _refreshTimer.Start();
+            if (IsEnabled())
+            {
+                _refreshTimer = new Timer();
+                _refreshTimer.Elapsed += Refresh;
+                _refreshTimer.Interval = _refreshInterval;
+                _refreshTimer.Start();
+            }
         }
 
         private void Configure(string settingsPostfix)
@@ -103,6 +106,12 @@ namespace LiDARCupDetection
         public async Task<ScanResult> GetScan()
         {
             return await _scannerService.Poll().ConfigureAwait(false);
+        }
+
+        public bool IsEnabled()
+        {
+            // Zero to disable
+            return _refreshInterval > 0;
         }
 
         public bool IsOnline()
