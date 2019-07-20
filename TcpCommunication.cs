@@ -19,21 +19,21 @@ namespace LiDARCupDetection
         private ObjectDetector _objectDetector;
         private int _tcpPort;
 
-        public TcpCommunication(ObjectDetector objectDetector)
+        public TcpCommunication(string settingsPostfix, ObjectDetector objectDetector)
         {
             _objectDetector = objectDetector;
 
-            Configure();
+            Configure(settingsPostfix);
             Task.Run(() => Run());
         }
 
-        private void Configure()
+        private void Configure(string settingsPostfix)
         {
-            Logger.Debug($"Configuring");
+            Logger.Debug($"Configuring ({settingsPostfix})");
 
             try
             {
-                var settings = (NameValueCollection)ConfigurationManager.GetSection("TcpCommunicationSettings").NotNull();
+                var settings = (NameValueCollection)ConfigurationManager.GetSection($"TcpCommunicationSettings_{settingsPostfix}").NotNull();
 
                 _tcpPort = int.Parse(settings["TcpPort"].NotNull());
                 Logger.Debug($"Using TcpPort: {_tcpPort}");

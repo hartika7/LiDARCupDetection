@@ -20,10 +20,10 @@ namespace LiDARCupDetection
 
         private ObjectDetector _objectDetector;
 
-        public MainWindow(ObjectDetector objectDetector)
+        public MainWindow(string title, ObjectDetector objectDetector)
         {
             InitializeComponent();
-
+            this.Text = title;
             _objectDetector = objectDetector;
         }
 
@@ -63,8 +63,8 @@ namespace LiDARCupDetection
         {
             try
             {
-                objectsChart.Series["Points"].Points.Clear();
                 var scanResult = await _objectDetector.GetScan();
+                objectsChart.Series["Points"].Points.Clear();
                 scanResult.Points.ForEach(v => objectsChart.Series["Points"].Points.AddXY(v.X, v.Y));
 
                 objectsChart.Series["Autodetected"].Points.Clear();
@@ -104,7 +104,7 @@ namespace LiDARCupDetection
 
         private void UpdateStaticObjects()
         {
-            foreach (var obj in _objectDetector.GetObjects())
+            foreach (var obj in _objectDetector.GetStaticObjects())
             {
                 var chartSeries = objectsChart.Series[obj.Id];
                 chartSeries.Color = obj.Active ? Color.Red : Color.Green;

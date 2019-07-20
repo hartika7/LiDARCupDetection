@@ -49,20 +49,20 @@ namespace LiDARCupDetection
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private static ScannerService _scannerService;
+        private ScannerService _scannerService;
         private Timer _refreshTimer;
-        private static int _refreshInterval;
-        private static List<ObjectLocation> _objects { get; set; }
-        private static AutodetectConfiguration _autodetectConfiguration { get; set; }
+        private int _refreshInterval;
+        private List<ObjectLocation> _objects { get; set; }
+        private AutodetectConfiguration _autodetectConfiguration { get; set; }
 
-        public ObjectDetector(ScannerService scannerService = null)
+        public ObjectDetector(string settingsPostfix, ScannerService scannerService)
         {
             Logger.Debug($"Started");
 
-            _scannerService = scannerService ?? new ScannerService();
             _objects = new List<ObjectLocation>();
+            _scannerService = scannerService;
 
-            Configure();
+            Configure(settingsPostfix);
 
             _refreshTimer = new Timer();
             _refreshTimer.Elapsed += Refresh;
@@ -70,13 +70,13 @@ namespace LiDARCupDetection
             _refreshTimer.Start();
         }
 
-        private void Configure()
+        private void Configure(string settingsPostfix)
         {
-            Logger.Debug($"Configuring");
+            Logger.Debug($"Configuring ({settingsPostfix})");
 
             try
             {
-                var settings = (NameValueCollection)ConfigurationManager.GetSection("ObjectDetectorSettings").NotNull();
+                var settings = (NameValueCollection)ConfigurationManager.GetSection($"ObjectDetectorSettings_{settingsPostfix}").NotNull();
 
                 _refreshInterval = int.Parse(settings["RefreshInterval"].NotNull());
                 Logger.Debug($"Using RefreshInterval: {_refreshInterval}");
@@ -154,7 +154,7 @@ namespace LiDARCupDetection
             }
         }
 
-        private static async void Refresh(object sender, ElapsedEventArgs e)
+        private async void Refresh(object sender, ElapsedEventArgs e)
         {
             var scanResult = await _scannerService.Poll().ConfigureAwait(false);
             var staticObjects = _objects.Where(v => !v.Autodetected).ToList();
@@ -169,7 +169,7 @@ namespace LiDARCupDetection
 
                 if (objActive)
                 {
-                    obj.ActiveTime += _refreshInterval / 1000;
+                    obj.ActiveTime += _refreshInterval / 1000.0;
                 } else
                 {
                     obj.ActiveTime = 0;
@@ -179,7 +179,7 @@ namespace LiDARCupDetection
             Autodetect(scanResult);
         }
 
-        private static void Autodetect(ScanResult scanResult)
+        private void Autodetect(ScanResult scanResult)
         {
             var autodetectPoints = new List<Point>();
 
@@ -204,7 +204,7 @@ namespace LiDARCupDetection
                         location.Location = newLocation;
                     }
 
-                    location.ActiveTime += _refreshInterval;
+                    location.ActiveTime += _refreshInterval / 1000.0;
                     autodetectPoints.Remove(newLocation);
                 }
                 catch
@@ -225,7 +225,7 @@ namespace LiDARCupDetection
             });
         }
 
-        private static void AutodetectNext(ScanResult scanResult, int nextIndex, ref List<Point> autodetectPoints)
+        private void AutodetectNext(ScanResult scanResult, int nextIndex, ref List<Point> autodetectPoints)
         {
             int indexStart = -1;
             int indexStop = -1;
@@ -275,7 +275,7 @@ namespace LiDARCupDetection
             }
         }
 
-        private static double Distance(Point pointStart, Point pointEnd)
+        private double Distance(Point pointStart, Point pointEnd)
         {
             return Math.Sqrt(Math.Pow(pointEnd.X - pointStart.X, 2) + Math.Pow(pointEnd.Y - pointStart.Y, 2));
         }

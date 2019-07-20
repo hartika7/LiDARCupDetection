@@ -73,6 +73,7 @@
             // 
             // refreshTimer
             // 
+            this.refreshTimer.Interval = 500;
             this.refreshTimer.Tick += new System.EventHandler(this.refreshTimer_Tick);
             // 
             // MainWindow

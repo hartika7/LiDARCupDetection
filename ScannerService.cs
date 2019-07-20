@@ -14,7 +14,6 @@ namespace LiDARCupDetection
 {
     public class ScannerService
     {
-        private static string SCANNER_COMMAND = "\x02sRN LMDscandata\x03";
         private static int BUFFER_SIZE = 4096;
         private static int SKIP_BYTES_START = 1;
         private static int SKIP_BYTES_END = 2;
@@ -52,25 +51,29 @@ namespace LiDARCupDetection
         private StreamWriter _scannerWriter;
         private bool _connecting = false;
 
+        private string _scannerCommand { get; set; }
         private string _scannerIP { get; set; }
         private int _scannerPort { get; set; }
         private int _startAngle { get; set; }
         private int _stopAngle { get; set; }
 
-        public ScannerService()
+        public ScannerService(string settingsPostfix)
         {
             Logger.Debug($"Started");
 
-            Configure();
+            Configure(settingsPostfix);
         }
 
-        private void Configure()
+        private void Configure(string settingsPostfix)
         {
-            Logger.Debug($"Configuring");
+            Logger.Debug($"Configuring ({settingsPostfix})");
 
             try
             {
-                var settings = (NameValueCollection)ConfigurationManager.GetSection("ScannerServiceSettings").NotNull();
+                var settings = (NameValueCollection)ConfigurationManager.GetSection($"ScannerServiceSettings_{settingsPostfix}").NotNull();
+
+                _scannerCommand = settings["ScannerCommand"].NotNull();
+                Logger.Debug($"Using ScannerCommand: {_scannerCommand}");
 
                 _scannerIP = settings["ScannerIP"].NotNull();
                 Logger.Debug($"Using ScannerIP: {_scannerIP}");
@@ -154,7 +157,7 @@ namespace LiDARCupDetection
                     throw new Exception("Not connected");
                 }
 
-                _scannerWriter.Write(SCANNER_COMMAND);
+                _scannerWriter.Write($"\x02{_scannerCommand}\x03");
                 _scannerWriter.Flush();
 
                 byte[] receivedBytes = new byte[BUFFER_SIZE];
