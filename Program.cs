@@ -16,25 +16,23 @@ namespace LiDARCupDetection
 
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private static ObjectDetector _objectDetectorTIM561;
-        private static ObjectDetector _objectDetectorTIM361;
-        private static TcpCommunication _tcpCommunicationTIM561;
-        private static TcpCommunication _tcpCommunicationTIM361;
+        private static Dictionary<string, ObjectDetector> _objectDetectors; 
+        private static TcpCommunication _tcpCommunication;
 
         static void Main(string[] args)
         {
             Logger.Info("Application started");
 
-            _objectDetectorTIM561 = new ObjectDetector(TIM561_KEY, new ScannerService(TIM561_KEY));
-            _objectDetectorTIM361 = new ObjectDetector(TIM361_KEY, new ScannerService(TIM361_KEY));
-            _tcpCommunicationTIM561 = new TcpCommunication(TIM561_KEY, _objectDetectorTIM561);
-            _tcpCommunicationTIM361 = new TcpCommunication(TIM361_KEY, _objectDetectorTIM361);
+            _objectDetectors = new Dictionary<string, ObjectDetector>();
+            _objectDetectors.Add(TIM561_KEY, new ObjectDetector(TIM561_KEY, new ScannerService(TIM561_KEY)));
+            _objectDetectors.Add(TIM361_KEY, new ObjectDetector(TIM361_KEY, new ScannerService(TIM361_KEY)));
+
+            _tcpCommunication = new TcpCommunication(_objectDetectors);
 
             Task.Run(() => UpdateTitle());
 
             Console.WriteLine("LiDAR Cup Detection for Drinkkirobotti 5.0");
-            Console.WriteLine($"Serving on port: {_tcpCommunicationTIM561.GetPort()} (TIM561)");
-            Console.WriteLine($"Serving on port: {_tcpCommunicationTIM361.GetPort()} (TIM361)\n");
+            Console.WriteLine($"Serving on port: {_tcpCommunication.GetPort()}\n");
             PrintHelp();
 
             while (true)
@@ -51,32 +49,35 @@ namespace LiDARCupDetection
                         ShowGUI();
                         break;
                     case "port":
-                        Console.WriteLine($"Serving on port: {_tcpCommunicationTIM561.GetPort()} (TIM561)");
-                        Console.WriteLine($"Serving on port: {_tcpCommunicationTIM361.GetPort()} (TIM361)");
+                        Console.WriteLine($"Serving on port: {_tcpCommunication.GetPort()}");
                         break;
                     case "objects":
-                        Console.WriteLine("TIM561:");
-                        Console.WriteLine(_objectDetectorTIM561.GetObjects().ToJSON());
-                        Console.WriteLine("TIM361:");
-                        Console.WriteLine(_objectDetectorTIM361.GetObjects().ToJSON());
+                        foreach (var objectDetector in _objectDetectors)
+                        {
+                            Console.WriteLine($"{objectDetector.Key}:");
+                            Console.WriteLine(objectDetector.Value.GetObjects().ToJSON());
+                        }
                         break;
                     case "active":
-                        Console.WriteLine("TIM561:");
-                        Console.WriteLine(_objectDetectorTIM561.GetActiveObjects().ToJSON());
-                        Console.WriteLine("TIM361:");
-                        Console.WriteLine(_objectDetectorTIM361.GetActiveObjects().ToJSON());
+                        foreach (var objectDetector in _objectDetectors)
+                        {
+                            Console.WriteLine($"{objectDetector.Key}:");
+                            Console.WriteLine(objectDetector.Value.GetActiveObjects().ToJSON());
+                        }
                         break;
                     case "auto":
-                        Console.WriteLine("TIM561:");
-                        Console.WriteLine(_objectDetectorTIM561.GetAutodetected().ToJSON());
-                        Console.WriteLine("TIM361:");
-                        Console.WriteLine(_objectDetectorTIM361.GetAutodetected().ToJSON());
+                        foreach (var objectDetector in _objectDetectors)
+                        {
+                            Console.WriteLine($"{objectDetector.Key}:");
+                            Console.WriteLine(objectDetector.Value.GetAutodetected().ToJSON());
+                        }
                         break;
                     case "autoconfig":
-                        Console.WriteLine("TIM561:");
-                        Console.WriteLine(_objectDetectorTIM561.GetAutodetectConfiguration().ToJSON());
-                        Console.WriteLine("TIM361:");
-                        Console.WriteLine(_objectDetectorTIM361.GetAutodetectConfiguration().ToJSON());
+                        foreach (var objectDetector in _objectDetectors)
+                        {
+                            Console.WriteLine($"{objectDetector.Key}:");
+                            Console.WriteLine(objectDetector.Value.GetAutodetectConfiguration().ToJSON());
+                        }
                         break;
                     default:
                         break;
@@ -90,13 +91,12 @@ namespace LiDARCupDetection
             Logger.Debug("Showing GUI");
 
             Application.EnableVisualStyles();
-            if (_objectDetectorTIM561.IsEnabled())
+            foreach (var objectDetector in _objectDetectors)
             {
-                Task.Run(() => Application.Run(new MainWindow("TIM561", _objectDetectorTIM561)));
-            }
-            if (_objectDetectorTIM361.IsEnabled())
-            {
-                Task.Run(() => Application.Run(new MainWindow("TIM361", _objectDetectorTIM361)));
+                if (objectDetector.Value.IsEnabled())
+                {
+                    Task.Run(() => Application.Run(new MainWindow(objectDetector.Key, objectDetector.Value)));
+                }
             }
         }
 
@@ -112,7 +112,7 @@ namespace LiDARCupDetection
             while (true)
             {
                 var appName = Assembly.GetExecutingAssembly().GetName().Name;
-                Console.Title = $"{appName} (TIM561: {GetDetectorStatus(_objectDetectorTIM561)}, TIM361: {GetDetectorStatus(_objectDetectorTIM361)})";
+                Console.Title = $"{appName} (TIM561: {GetDetectorStatus(_objectDetectors[TIM561_KEY])}, TIM361: {GetDetectorStatus(_objectDetectors[TIM361_KEY])})";
                 Thread.Sleep(1000);
             }
         }

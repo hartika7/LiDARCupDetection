@@ -14,26 +14,29 @@ namespace LiDARCupDetection
 
     class TcpCommunication
     {
+        private static string TIM561_KEY = "TIM561";
+        private static string TIM361_KEY = "TIM361";
+
         private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private ObjectDetector _objectDetector;
+        private Dictionary<string, ObjectDetector> _objectDetectors;
         private int _tcpPort;
 
-        public TcpCommunication(string settingsPostfix, ObjectDetector objectDetector)
+        public TcpCommunication(Dictionary<string, ObjectDetector> objectDetectors)
         {
-            _objectDetector = objectDetector;
+            _objectDetectors = objectDetectors;
 
-            Configure(settingsPostfix);
+            Configure();
             Task.Run(() => Run());
         }
 
-        private void Configure(string settingsPostfix)
+        private void Configure()
         {
-            Logger.Debug($"Configuring ({settingsPostfix})");
+            Logger.Debug($"Configuring)");
 
             try
             {
-                var settings = (NameValueCollection)ConfigurationManager.GetSection($"TcpCommunicationSettings_{settingsPostfix}").NotNull();
+                var settings = (NameValueCollection) ConfigurationManager.GetSection($"TcpCommunicationSettings").NotNull();
 
                 _tcpPort = int.Parse(settings["TcpPort"].NotNull());
                 Logger.Debug($"Using TcpPort: {_tcpPort}");
@@ -100,8 +103,10 @@ namespace LiDARCupDetection
         {
             switch (command)
             {
-                case "ActiveObjects()":
-                    return _objectDetector.GetActiveObjects().ToJSON(false);
+                case "ActiveObjectsL()":
+                    return _objectDetectors[TIM361_KEY].GetActiveObjects().ToJSON(false);
+                case "ActiveObjectsR()":
+                    return _objectDetectors[TIM561_KEY].GetActiveObjects().ToJSON(false);
                 default:
                     return "Unknown command";
             }
