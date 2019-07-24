@@ -22,12 +22,15 @@ namespace LiDARCupDetection
             public bool Autodetected { get; set; }
             public bool Active => ActiveTime >= ActiveTimeTol;
             public double ActiveTime { get; set; }
+            public double InactiveTime { get; set; }
             public double ActiveTimeTol { get; set; }
+            public double InactiveTimeTol { get; set; }
 
             public ObjectLocation()
             {
                 Autodetected = false;
                 ActiveTime = 0;
+                InactiveTime = 0;
             }
         }
 
@@ -37,6 +40,7 @@ namespace LiDARCupDetection
             public double RTol { get; set; }
             public double MoveTol { get; set; }
             public double ActiveTimeTol { get; set; }
+            public double InactiveTimeTol { get; set; }
         }
 
         public class Limits
@@ -179,9 +183,18 @@ namespace LiDARCupDetection
                 if (objActive)
                 {
                     obj.ActiveTime += _refreshInterval / 1000.0;
+                    obj.InactiveTime = 0;
                 } else
                 {
-                    obj.ActiveTime = 0;
+                    if (obj.InactiveTime < obj.InactiveTimeTol)
+                    {
+                        obj.InactiveTime += _refreshInterval / 1000.0;
+
+                    } else
+                    {
+                        obj.ActiveTime = 0;
+                        obj.InactiveTime = 0;
+                    }
                 }
             }
 
@@ -202,26 +215,36 @@ namespace LiDARCupDetection
             }
 
             var autodetectedObjects = _objects.Where(v => v.Autodetected).ToList();
-            foreach (var location in autodetectedObjects)
+            foreach (var obj in autodetectedObjects)
             {
                 try
                 {
-                    var newLocation = autodetectPoints.Single(v => Distance(location.Location, v) <= _autodetectConfiguration.MoveTol);
+                    var newLocation = autodetectPoints.Single(v => Distance(obj.Location, v) <= _autodetectConfiguration.MoveTol);
 
-                    if (!location.Active)
+                    // Follow object while it's not considered active
+                    if (!obj.Active)
                     {
-                        location.Location = newLocation;
+                        obj.Location = newLocation;
                     }
 
-                    location.ActiveTime += _refreshInterval / 1000.0;
+                    obj.ActiveTime += _refreshInterval / 1000.0;
+                    obj.InactiveTime = 0;
                     autodetectPoints.Remove(newLocation);
                 }
                 catch
                 {
-                    _objects.Remove(location);
+                    // No single autodetect point close enough to previously detected location
+                    if (obj.InactiveTime < obj.InactiveTimeTol)
+                    {
+                        obj.InactiveTime += _refreshInterval / 1000.0;
+                    }
+                    {
+                        _objects.Remove(obj);
+                    }
                 }
             }
 
+            // Points that didn't match any previously detected location
             autodetectPoints.ForEach(v =>
             {
                 _objects.Add(new ObjectLocation()
@@ -229,7 +252,8 @@ namespace LiDARCupDetection
                     Id = Guid.NewGuid().ToString().ToUpper(),
                     Location = v,
                     Autodetected = true,
-                    ActiveTimeTol = _autodetectConfiguration.ActiveTimeTol
+                    ActiveTimeTol = _autodetectConfiguration.ActiveTimeTol,
+                    InactiveTimeTol = _autodetectConfiguration.InactiveTimeTol
                 });
             });
         }

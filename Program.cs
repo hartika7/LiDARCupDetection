@@ -54,32 +54,33 @@ namespace LiDARCupDetection
                     case "objects":
                         foreach (var objectDetector in _objectDetectors)
                         {
-                            Console.WriteLine($"{objectDetector.Key}:");
+                            Console.WriteLine($"{objectDetector.Key} ->");
                             Console.WriteLine(objectDetector.Value.GetObjects().ToJSON());
                         }
                         break;
                     case "active":
                         foreach (var objectDetector in _objectDetectors)
                         {
-                            Console.WriteLine($"{objectDetector.Key}:");
+                            Console.WriteLine($"{objectDetector.Key} ->");
                             Console.WriteLine(objectDetector.Value.GetActiveObjects().ToJSON());
                         }
                         break;
                     case "auto":
                         foreach (var objectDetector in _objectDetectors)
                         {
-                            Console.WriteLine($"{objectDetector.Key}:");
+                            Console.WriteLine($"{objectDetector.Key} ->");
                             Console.WriteLine(objectDetector.Value.GetAutodetected().ToJSON());
                         }
                         break;
                     case "autoconfig":
                         foreach (var objectDetector in _objectDetectors)
                         {
-                            Console.WriteLine($"{objectDetector.Key}:");
+                            Console.WriteLine($"{objectDetector.Key} ->");
                             Console.WriteLine(objectDetector.Value.GetAutodetectConfiguration().ToJSON());
                         }
                         break;
                     default:
+                        Console.WriteLine("Unknown command");
                         break;
                 }
             }
