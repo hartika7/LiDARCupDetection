@@ -1,0 +1,13 @@
+﻿[
+  {
+    "Id": "Cup1", // string
+    "Limits": {
+      "ThMin": 30, // deg
+      "ThMax": 60, // deg
+      "RMin": 200, // mm
+      "RMax": 400 // mm
+    },
+    "ActiveTimeTol": 5, // s
+    "InactiveTimeTol": 2 // s
+  }
+]

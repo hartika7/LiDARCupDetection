@@ -1,12 +1,12 @@
 ﻿{
   "Limits": {
-    "ThMin": -30, // deg
-    "ThMax": 60, // deg
-    "RMin": 20, // mm
-    "RMax": 800 // mm
+    "ThMin": -30,
+    "ThMax": 60,
+    "RMin": 20,
+    "RMax": 800
   },
-  "RTol": 75, // mm
-  "MoveTol": 30, // mm
-  "ActiveTimeTol": 5, // s
-  "InactiveTimeTol": 2 // s
+  "RTol": 75,
+  "MoveTol": 30,
+  "ActiveTimeTol": 5,
+  "InactiveTimeTol": 2
 }
